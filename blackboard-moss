@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [[ "$1" != *.zip ]]
+    then echo "Usage: $0 gradebook.zip"
+    exit 1
+elif [ ! -f "$1" ]
+    then echo "$1 does not exist."
+    exit 2
+fi
