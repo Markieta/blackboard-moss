@@ -1,9 +1,46 @@
 #!/usr/bin/env bash
 
-if [[ "$1" != *.zip ]]
-    then echo "Usage: $0 gradebook.zip"
-    exit 1
-elif [ ! -f "$1" ]
-    then echo "$1 does not exist."
-    exit 2
-fi
+MYDIR=$(dirname $0)
+tempdir=$(mktemp -d)
+
+for archive in $@
+do
+    if [[ "$archive" != *.zip ]]
+        then echo "Usage: $0 gradebook_1.zip [ gradebook_2.zip gradebook_3.zip ... ]"
+        exit 1
+    elif [ ! -f "$archive" ]
+        then echo "$archive does not exist."
+        exit 2
+    fi
+
+    unzip "$archive" -d "$tempdir"
+done
+
+echo 'Removing text submissions'
+rm "$tempdir/"*_*_attempt_[1-9][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]-[0-2][0-9]-[0-5][0-9]-[0-5][0-9].txt
+
+for f in "$tempdir"/*\ *; do mv "$f" "${f// /_}"; done
+
+for file in "$tempdir/"*
+do
+    filename=$(basename "$file")
+    extension="${filename##*.}"
+    filename="${filename%.*}"
+    newdir="$tempdir/$filename.dir"
+
+    mkdir "$newdir"
+
+    if [ "$extension" == 'zip' ]; then
+        unzip "$file" -d "$newdir"
+        rm "$file"
+    elif [ "$extension" == 'rar' ]; then
+        unrar x "$file" "$newdir"
+        rm "$file"
+    elif [ "$extension" == 'js' ]; then
+        mv "$file" "$newdir"
+    else
+        mv "$file" "$newdir/$filename.js"
+    fi
+done
+
+$MYDIR/moss -l javascript -d "$tempdir"/*/*.js
