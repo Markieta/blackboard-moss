@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 
-require './config.pl';
+use File::Basename;
+$MYDIR = dirname($0);
+require "$MYDIR/config.pl";
 
 # Please read all the comments down to the line that says "TOP".
 # These comments are divided into three sections:

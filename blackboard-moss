@@ -1,27 +1,59 @@
 #!/usr/bin/env bash
 
+usage() {
+    echo "Usage: $0 [-l language] [-b basefile1] ... [-b basefilen]" \
+         "gradebook1.zip gradebook2.zip gradebook3.zip ..." 1>&2
+}
+
+while getopts ":l:b:" o; do
+    case "${o}" in
+        l)
+            l=${OPTARG}
+            ;;
+        b)
+            basefiles+=("$OPTARG")
+            ;;
+        *)
+            usage
+            exit 1;
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "$l" ]; then
+    l='c'
+fi
+
 MYDIR=$(dirname $0)
 tempdir=$(mktemp -d)
 
+if [ -z "$1" ]; then
+    usage
+    exit 2;
+fi
+
 for archive in $@
 do
-    if [[ "$archive" != *.zip ]]
-        then echo "Usage: $0 gradebook_1.zip [ gradebook_2.zip gradebook_3.zip ... ]"
-        exit 1
-    elif [ ! -f "$archive" ]
-        then echo "$archive does not exist."
-        exit 2
+    if [[ "$archive" != *.zip ]]; then
+        usage
+        exit 3;
+    elif [ ! -f "$archive" ]; then
+        usage
+        exit 4;
     fi
 
     unzip "$archive" -d "$tempdir"
 done
 
 echo 'Removing text submissions'
-rm "$tempdir/"*_*_attempt_[1-9][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]-[0-2][0-9]-[0-5][0-9]-[0-5][0-9].txt
+rm "$tempdir"/*_*_attempt_[1-9][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]-[0-2][0-9]-[0-5][0-9]-[0-5][0-9].txt
 
+echo 'Replacing spaces in filenames with underscores'
 for f in "$tempdir"/*\ *; do mv "$f" "${f// /_}"; done
 
-for file in "$tempdir/"*
+echo 'Separating user submissions into individual directories'
+for file in "$tempdir"/*
 do
     filename=$(basename "$file")
     extension="${filename##*.}"
@@ -36,11 +68,18 @@ do
     elif [ "$extension" == 'rar' ]; then
         unrar x "$file" "$newdir"
         rm "$file"
-    elif [ "$extension" == 'js' ]; then
-        mv "$file" "$newdir"
     else
-        mv "$file" "$newdir/$filename.js"
+        mv "$file" "$newdir"
     fi
 done
 
-$MYDIR/moss -l javascript -d "$tempdir"/*/*.js
+for basefile in "${basefiles[@]}"
+do
+    b+="-b $basefile "
+done
+
+echo $MYDIR
+
+
+find "$tempdir"/*/ -type f -exec grep -Iq . {} \; -and -print |
+xargs "$MYDIR"/moss -l $l $b -d
