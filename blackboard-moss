@@ -78,8 +78,5 @@ do
     b+="-b $basefile "
 done
 
-echo $MYDIR
-
-
 find "$tempdir"/*/ -type f -exec grep -Iq . {} \; -and -print |
 xargs "$MYDIR"/moss -l $l $b -d
