@@ -68,6 +68,10 @@ do
     elif [ "$extension" == 'rar' ]; then
         unrar x "$file" "$newdir"
         rm "$file"
+    elif [ "$extension" == 'doc' ] || 
+         [ "$extension" == 'docx' ] || 
+         [ "$extension" == 'pdf' ] ; then
+        rm "$file"
     else
         mv "$file" "$newdir"
     fi
@@ -79,4 +83,4 @@ do
 done
 
 find "$tempdir"/*/ -type f -exec grep -Iq . {} \; -and -print |
-xargs "$MYDIR"/moss -l $l $b -d
+xargs -d "\n" "$MYDIR"/moss -l $l $b -d
