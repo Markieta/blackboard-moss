@@ -68,6 +68,15 @@ do
     elif [ "$extension" == 'rar' ]; then
         unrar x "$file" "$newdir"
         rm "$file"
+    elif [ "$extension" == 'tar' ]; then
+        tar xvC "$newdir" -f "$file"
+        rm "$file"
+    elif [ "$extension" == '7z' ]; then
+        7za x "$file" -o"$newdir"
+        rm "$file"
+    elif [ "$extension" == 'gz' ]; then
+        tar xvzC "$newdir" -f "$file"
+        rm "$file"
     elif [ "$extension" == 'doc' ] || 
          [ "$extension" == 'docx' ] || 
          [ "$extension" == 'pdf' ] ; then
